@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import booksRouter from './routers/booksRouter';
 
 //configure env
 dotenv.config();
@@ -12,10 +13,13 @@ const app = express();
 app.use(express.json());
 
 //Define port
-const port = process.env.port || 8080;
+const port = process.env.Port || 8080;
 
 //This will allow the user in the frontend to consume the APIs that you have created without any problem.
 app.use(cors({ credentials: true, origin: ['http://localhost:3000'] }));
+
+//books router
+app.use('/books', booksRouter);
 
 //Get request when server is live
 app.get('/', (req: Request, res: Response) => {

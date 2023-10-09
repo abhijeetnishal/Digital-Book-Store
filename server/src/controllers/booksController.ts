@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { mongoDBClient } from "../config/mongoDBConfig";
 import { ObjectId } from "mongodb";
+import elasticClient from "../config/elasticsearchConfig";
 
 const getAllBooksDetails = async (req: Request, res: Response) => {
     try {
@@ -53,6 +54,21 @@ const getSpecificBookDetails = async (req: Request, res: Response) => {
     }
 }
 
+const searchBooks = async (req: Request, res: Response) => {
+    try {
+        const booksDetails = await elasticClient.search({
+            index: "book",
+            query: { match: { title: req.query.title as string}, },
+        });
+
+        return res.status(200).json({data: booksDetails});
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "internal server error: " + error });
+    }
+}
+
 const createBook = async (req: Request, res: Response) => {
     try {
         //Get book details
@@ -63,15 +79,22 @@ const createBook = async (req: Request, res: Response) => {
         const collection = db.collection('books');
 
         //Insert a book details into DB
-        const bookDetails = await collection.insertOne({
+        const bookDetails = {
             title: title,
             author: author,
             publication_year: publicationYear,
             isbn: isbn,
             description: description
+        };
+
+        const result = await elasticClient.index({
+            index: 'book',
+            document: bookDetails,
         });
 
-        res.status(201).json({data: bookDetails});
+        //await collection.insertOne(bookDetails);
+
+        res.status(201).json({data: result});
     }
     catch (error) {
         console.log(error);
@@ -146,6 +169,7 @@ const deleteSpecificBook = async (req: Request, res: Response) => {
 export default {
     getAllBooksDetails,
     getSpecificBookDetails,
+    searchBooks,
     createBook,
     updateSpecificBook,
     deleteSpecificBook

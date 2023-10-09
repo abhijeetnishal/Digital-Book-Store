@@ -7,6 +7,9 @@ const booksRouter = express.Router();
 //create an endpoint to get all the books details
 booksRouter.get('/', booksController.getAllBooksDetails);
 
+//create an endpoint to search books using elasticsearch
+booksRouter.get('/search', booksController.searchBooks);
+
 //create an endpoint to get a specific book detail
 booksRouter.get('/:id', booksController.getSpecificBookDetails);
 

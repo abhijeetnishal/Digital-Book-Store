@@ -16,10 +16,11 @@ const getAllBooksDetails = async (req: Request, res: Response) => {
             const db = await mongoDBClient();
             const collection = db.collection('books');
 
+            //Set pagination limit
             const limit = 9;
             const skip = (Number(page) - 1) * limit;
             
-            //Get all books details
+            //Get paginated books details
             const booksDetails = await collection.find().skip(skip).limit(limit).toArray();
 
             return res.status(200).json({data: booksDetails});
@@ -57,8 +58,8 @@ const getSpecificBookDetails = async (req: Request, res: Response) => {
 const searchBooks = async (req: Request, res: Response) => {
     try {
         const booksDetails = await elasticClient.search({
-            index: "book",
-            query: { match: { title: req.query.title as string}, },
+            index: "books",
+            query: { match: { title: req.query.title as string }, },
         });
 
         return res.status(200).json({data: booksDetails});
@@ -88,7 +89,7 @@ const createBook = async (req: Request, res: Response) => {
         };
 
         const result = await elasticClient.index({
-            index: 'book',
+            index: 'books',
             document: bookDetails,
         });
 
@@ -134,7 +135,42 @@ const updateSpecificBook = async (req: Request, res: Response) => {
                 }
             );
 
-            res.status(200).json({data: updatedBookDetails});
+            //Search the document based on isbn
+            const searchResponse = await elasticClient.search({
+                index: 'books',
+                body: {
+                    query: {
+                        match: {
+                            isbn: bookDetails.isbn,
+                        },
+                    },
+                },
+            });
+        
+            if(searchResponse.hits.total === 0) {
+                return res.status(404).json('no such documents found');
+            }
+            else{
+                //Get the document id
+                const documentId = searchResponse.hits.hits[0]._id;
+            
+                //Update the document using document id
+                const updatedResponse = await elasticClient.update({
+                    index: 'books',
+                    id: documentId,
+                    body: {
+                        doc: {
+                            title: title ? title : bookDetails.title,
+                            author: author ? author : bookDetails.author,
+                            publication_year: publicationYear ? publicationYear : bookDetails.publication_year,
+                            isbn: isbn ? isbn : bookDetails.isbn,
+                            description: description ? description : bookDetails.description
+                        },
+                    },
+                });
+
+                return res.status(200).json({mongoUpdateInfo: updatedResponse, elasticsearchUpdateInfo: updatedResponse });
+            }
         }
     }
     catch (error) {
@@ -152,13 +188,41 @@ const deleteSpecificBook = async (req: Request, res: Response) => {
         const db = await mongoDBClient();
         const collection = db.collection('books');
 
-        //Delete the book using book id
-        const bookDetails = await collection.deleteOne({_id: new ObjectId(bookId)});
+        //Get specific book details from book id
+        const bookDetails = await collection.findOne({_id: new ObjectId(bookId)});
 
-        if(bookDetails.deletedCount)
-            res.status(201).json({message: 'book deleted'});
-        else    
-            res.status(404).json({meessage: 'no such book found to delete'})
+        //Search the document based on isbn
+        const searchResponse = await elasticClient.search({
+            index: 'books',
+            body: {
+                query: {
+                    match: {
+                        isbn: bookDetails.isbn,
+                    },
+                },
+            },
+        });
+    
+        if(searchResponse.hits.total === 0) {
+            return res.status(404).json('no such documents found');
+        }
+        else{
+            //Get the document id
+            const documentId = searchResponse.hits.hits[0]._id;
+        
+            await elasticClient.delete({
+                index: "books",
+                id: documentId,
+            });
+
+            //Delete the book using book id
+            await collection.deleteOne({_id: new ObjectId(bookId)});
+    
+            if(bookDetails)
+                return res.status(200).json({message: 'book deleted'});
+            else    
+                return res.status(404).json({meessage: 'no such book found to delete'})   
+        }
     }
     catch (error) {
         console.log(error);

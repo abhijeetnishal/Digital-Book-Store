@@ -37,6 +37,10 @@ const getSpecificBookDetails = async (req: Request, res: Response) => {
         //Get book id from params
         const bookId = req.params.id;
 
+        if(!bookId){
+            return res.status(400).json({messaage: 'book id missing'});
+        }
+
         //get db method to get collection details
         const db = await mongoDBClient();
         const collection = db.collection('books');
@@ -57,12 +61,43 @@ const getSpecificBookDetails = async (req: Request, res: Response) => {
 
 const searchBooks = async (req: Request, res: Response) => {
     try {
-        const booksDetails = await elasticClient.search({
-            index: "books",
-            query: { match: { title: req.query.title as string }, },
-        });
+        const { query } = req.query; // The search query parameter
 
-        return res.status(200).json({data: booksDetails});
+        if (!query) {
+            return res.status(400).json({ message: 'missing search query parameter' });
+        }
+        else{
+          const response = await elasticClient.search({
+            index: 'books', // Replace with your Elasticsearch index
+            body: {
+              query: {
+                bool: {
+                  should: [
+                    {
+                      wildcard: {
+                        title: `*${query}*`,
+                      },
+                    },
+                    {
+                      wildcard: {
+                        author: `*${query}*`,
+                      },
+                    },
+                    {
+                      wildcard: {
+                        description: `*${query}*`,
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          });
+      
+          const hits = response.hits.hits.map((hit) => hit._source);
+      
+          return res.status(200).json({ data: hits });
+        }
     }
     catch (error) {
         console.log(error);
@@ -75,6 +110,9 @@ const createBook = async (req: Request, res: Response) => {
         //Get book details
         const { title, author, publicationYear, isbn, description } = req.body;
 
+        if(!title || !author || !publicationYear || !isbn || !description)
+            return res.status(400).json('enter required fields');
+
         //Get db to get collection
         const db = await mongoDBClient();
         const collection = db.collection('books');
@@ -83,7 +121,7 @@ const createBook = async (req: Request, res: Response) => {
         const bookDetails = {
             title: title,
             author: author,
-            publication_year: publicationYear,
+            publicationYear: publicationYear,
             isbn: isbn,
             description: description
         };
@@ -93,7 +131,7 @@ const createBook = async (req: Request, res: Response) => {
             document: bookDetails,
         });
 
-        //await collection.insertOne(bookDetails);
+        await collection.insertOne(bookDetails);
 
         res.status(201).json({data: result});
     }
@@ -107,6 +145,10 @@ const updateSpecificBook = async (req: Request, res: Response) => {
     try {
         //Get book id from params
         const bookId = req.params.id;
+
+        if(!bookId){
+            return res.status(400).json({messaage: 'book id missing'});
+        }
 
         //Get book details
         const { title, author, publicationYear, isbn, description } = req.body;
@@ -169,7 +211,7 @@ const updateSpecificBook = async (req: Request, res: Response) => {
                     },
                 });
 
-                return res.status(200).json({mongoUpdateInfo: updatedResponse, elasticsearchUpdateInfo: updatedResponse });
+                return res.status(200).json({mongoUpdateInfo: updatedBookDetails, elasticsearchUpdateInfo: updatedResponse });
             }
         }
     }
@@ -183,6 +225,10 @@ const deleteSpecificBook = async (req: Request, res: Response) => {
     try {
         //Get book id from params
         const bookId = req.params.id;
+
+        if(!bookId){
+            return res.status(400).json({messaage: 'book id missing'});
+        }
 
         //Get db to get collection
         const db = await mongoDBClient();

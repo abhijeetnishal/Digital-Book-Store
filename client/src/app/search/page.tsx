@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import searchLogo from '../../../public/search_icon.png'
 import BookCardComponent from '@/components/BookCardComponent'
+import Link from 'next/link'
 
 type Props = {}
 
@@ -38,6 +39,9 @@ const Page = (props: Props) => {
       <header className="w-full h-[120px] flex justify-center items-center text-black text-[56px] font-semibold">
         Digital Book Store
       </header>
+      <nav className='w-full h-[40px] flex justify-center items-center text-gray-700 text-[28px] font-semibold'>
+        <Link href='/' className='w-[120px] border-transparent rounded-xl bg-blue-200 text-center'>Home</Link>
+      </nav>
       <section className='w-full p-[16px] flex flex-col justify-center items-center'>
         <section className="w-[563px] h-11 bg-white rounded-[24px] border border-blue-400 flex flex-row justify-between items-center">
           <section className="ml-4">

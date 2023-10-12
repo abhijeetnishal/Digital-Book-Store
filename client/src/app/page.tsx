@@ -9,10 +9,16 @@ export default function Home() {
   const [booksData, setBooksData] = useState<Array<object>>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
 
+  const limit = 8;
+
+  // Calculate the index range for the current page
+  const startIndex = (pageNumber - 1) * limit;
+  const endIndex = startIndex + limit;
+
   useEffect(()=>{
       const getBooksData = async()=>{
           // get the data from the api
-          const response = await fetch(`${process.env.NEXT_PUBLIC_HOST}/books?page=${2}&limit=${8}`, {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_HOST}/books?page=${pageNumber}&limit=${limit}`, {
               method: 'GET',
               headers: {
                   'Content-Type': 'application/json',
@@ -29,7 +35,7 @@ export default function Home() {
       getBooksData()
 
       .catch(console.error);
-  }, []);
+  }, [pageNumber]);
 
   return (
     <main className="w-full flex flex-col p-[16px]">
@@ -43,7 +49,7 @@ export default function Home() {
           </Link>
         </section>
       </nav>
-      <article className='w-full '>
+      <article className='w-full h-[600px]'>
           {
             booksData.length === 0 ?
             (
@@ -56,7 +62,7 @@ export default function Home() {
               <section className='w-full grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4'>
                 {
                   booksData.map((books: any, index)=>(
-                    <section key={index} className='w-full p-[8px]'>
+                    <section key={index} className='w-full px-[8px] py-[16px]'>
                       <BookCardComponent title={books.title} author={books.author} 
                       publicationYear={books.publicationYear} isbn={books.isbn} 
                       description={books.description} />
@@ -67,6 +73,22 @@ export default function Home() {
             )
           }
       </article>
+      <div className="flex justify-center mt-4">
+        <button
+          className="px-4 py-2 mr-2 bg-blue-500 text-white rounded"
+          onClick={()=>{setPageNumber(pageNumber - 1)}}
+          disabled={pageNumber === 1}
+        >
+          Previous
+        </button>
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+          onClick={() => setPageNumber(pageNumber + 1)}
+          disabled={ booksData.length < limit}
+        >
+          Next
+        </button>
+      </div>
     </main>
   )
 }

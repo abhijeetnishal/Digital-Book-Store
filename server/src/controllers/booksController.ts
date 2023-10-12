@@ -6,9 +6,9 @@ import elasticClient from "../config/elasticsearchConfig";
 const getAllBooksDetails = async (req: Request, res: Response) => {
     try {
         //Get page number from query
-        const { page } = req.query;
+        const { page, limit } = req.query;
 
-        if(!page){
+        if(!page || !limit){
             return res.status(400).json({message: 'page number not found'});
         }
         else{
@@ -17,11 +17,10 @@ const getAllBooksDetails = async (req: Request, res: Response) => {
             const collection = db.collection('books');
 
             //Set pagination limit
-            const limit = 9;
-            const skip = (Number(page) - 1) * limit;
+            const skip = (Number(page) - 1) * Number(limit);
             
             //Get paginated books details
-            const booksDetails = await collection.find().skip(skip).limit(limit).toArray();
+            const booksDetails = await collection.find().skip(skip).limit(Number(limit)).toArray();
 
             return res.status(200).json({data: booksDetails});
         }

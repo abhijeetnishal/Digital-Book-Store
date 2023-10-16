@@ -3,17 +3,26 @@ import React, { useEffect, useState } from 'react'
 import Link from "next/link";
 import BookCardComponent from '@/components/BookCardComponent';
 import searchLogo from '../../public/search_icon.png'
+import Image from 'next/image';
+import CreateBookComponent from '@/components/CreateBookComponent';
 
 export default function Home() {
 
   const [booksData, setBooksData] = useState<Array<object>>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
+  const [booksCount, setBooksCount] = useState<number>(0);
+  
+  const [showPopUpAdd, setShowPopUpAdd]  = useState<boolean>(false);
+
+  function handleAddClick(){
+      setShowPopUpAdd(true);
+  }
+
+  function handleCloseDialogAdd(){
+      setShowPopUpAdd(false);
+  }
 
   const limit = 8;
-
-  // Calculate the index range for the current page
-  const startIndex = (pageNumber - 1) * limit;
-  const endIndex = startIndex + limit;
 
   useEffect(()=>{
       const getBooksData = async()=>{
@@ -30,6 +39,7 @@ export default function Home() {
           const booksDetails = await response.json();
           setBooksData(booksDetails.data);
           //console.log(booksDetails.data);
+          setBooksCount(booksDetails.booksCount);
       }
 
       getBooksData()
@@ -43,11 +53,21 @@ export default function Home() {
         Digital Book Store
       </header>
       <nav className="w-full h-[70px] flex flex-row">
-        <section className="w-full h-[35px] flex justify-start pl-[8px]">
+        <section className="h-[35px] flex justify-start pl-[8px]">
           <Link href='/search' className="w-[180px] flex justify-center items-center border rounded-lg bg-gray-200 text-black font-bold">
-            Search Books <span className='pl-[4px]'><img className='h-[18px]' src={searchLogo.src} alt="" /></span>
+            Search Books <span className='pl-[4px]'><Image width={18} height={18} src={searchLogo} alt="" /></span>
           </Link>
         </section>
+        <button onClick={()=>handleAddClick()} className='ml-[20px] w-[180px] h-[35px] flex justify-center items-center border rounded-lg bg-gray-200 text-black font-bold'>
+          Create
+        </button>
+        {
+              (showPopUpAdd) && (
+                  <CreateBookComponent
+                      onClose={handleCloseDialogAdd}
+                  />
+              )
+        }
       </nav>
       <article className='w-full h-[600px]'>
           {
@@ -63,7 +83,7 @@ export default function Home() {
                 {
                   booksData.map((books: any, index)=>(
                     <section key={index} className='w-full px-[8px] py-[16px]'>
-                      <BookCardComponent title={books.title} author={books.author} 
+                      <BookCardComponent bookId={books._id} title={books.title} author={books.author} 
                       publicationYear={books.publicationYear} isbn={books.isbn} 
                       description={books.description} />
                     </section>
@@ -84,7 +104,7 @@ export default function Home() {
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded"
           onClick={() => setPageNumber(pageNumber + 1)}
-          disabled={ booksData.length < limit}
+          disabled={ pageNumber * limit >= booksCount }
         >
           Next
         </button>

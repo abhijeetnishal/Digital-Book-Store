@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import searchLogo from '../../../public/search_icon.png'
 import BookCardComponent from '@/components/BookCardComponent'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type Props = {}
 
@@ -55,14 +56,17 @@ const Page = (props: Props) => {
             />
           </section>
           <section>
-            <button onClick={getBooksData} className=" text-white px-4 py-2 rounded-lg">
-              <img src={searchLogo.src} alt="" />
+            <button onClick={getBooksData} className="text-white px-4 py-2 rounded-lg">
+              <Image width={25} height={25} src={searchLogo} alt="" />
             </button>
           </section>
         </section>
 
         <section className='w-full pt-[10px]'>
             {
+              !searchQuery?
+              (null)
+              :
               searchedData.length === 0 ?
               (
                 <section className='pt-[10px] w-full flex justify-center'>
@@ -75,7 +79,7 @@ const Page = (props: Props) => {
                   {
                     searchedData.map((books: any, index)=>(
                       <section key={index} className='w-full p-[8px]'>
-                        <BookCardComponent title={books.title} author={books.author} 
+                        <BookCardComponent bookId={books._id} title={books.title} author={books.author} 
                         publicationYear={books.publicationYear} isbn={books.isbn} 
                         description={books.description} />
                       </section>

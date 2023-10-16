@@ -16,13 +16,16 @@ const getAllBooksDetails = async (req: Request, res: Response) => {
             const db = await mongoDBClient();
             const collection = db.collection('books');
 
+            //get total documents count
+            const totalBooks = await collection.countDocuments();
+
             //Set pagination limit
             const skip = (Number(page) - 1) * Number(limit);
             
             //Get paginated books details
             const booksDetails = await collection.find().skip(skip).limit(Number(limit)).toArray();
 
-            return res.status(200).json({data: booksDetails});
+            return res.status(200).json({data: booksDetails, booksCount: totalBooks});
         }
     }
     catch (error) {
@@ -144,6 +147,7 @@ const updateSpecificBook = async (req: Request, res: Response) => {
     try {
         //Get book id from params
         const bookId = req.params.id;
+        console.log(bookId);
 
         if(!bookId){
             return res.status(400).json({messaage: 'book id missing'});

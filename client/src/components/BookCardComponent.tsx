@@ -1,7 +1,11 @@
-import React from 'react'
+'use client'
+import React, { useState } from 'react'
 import bookImg from '../../public/book_image.png'
+import EditBookComponent from './EditBookComponent'
+import DeleteBookComponent from './DeleteBookComponent'
 
 interface book{
+    bookId: string,
     title: string,
     author: string,
     publicationYear: string,
@@ -10,6 +14,16 @@ interface book{
 }
 
 const BookCardComponent = (props: book) => {
+    const [showPopUpDelete, setShowPopUpDelete] = useState<boolean>(false);
+    const [showPopUpEdit, setShowPopUpEdit] = useState<boolean>(false);
+
+    function handleCloseDialogDelete(){
+        setShowPopUpDelete(false);
+    }
+  
+    function handleCloseDialogEdit(){
+        setShowPopUpEdit(false);
+    }
     return (
         <section className='w-full h-[240px] bg-white rounded-lg shadow p-[16px]'>
             <section className='w-full flex flex-col'>
@@ -30,8 +44,32 @@ const BookCardComponent = (props: book) => {
                         </section>
                     </section>
                 </section>
-                <section className='text-neutral-500 text-sm font-normal pt-[16px]'>
+                <section className='text-neutral-500 text-sm font-normal pb-[5px]'>
                     {props.description}
+                </section>
+                <section className='w-full flex flex-row'>
+                    <button onClick={()=>setShowPopUpEdit(true)} className='w-[50px] mr-[8px] items-center border rounded-lg bg-gray-200 text-black font-bold'>
+                        Edit
+                    </button>
+                    {
+                        (showPopUpEdit) && (
+                            <EditBookComponent
+                                bookId = {props.bookId}
+                                onClose={handleCloseDialogEdit}
+                            />
+                        )
+                    }
+                    <button onClick={()=>setShowPopUpDelete(true)} className='w-[70px] items-center border rounded-lg bg-gray-200 text-black font-bold'>
+                        Delete
+                    </button>
+                    {
+                        (showPopUpDelete) && (
+                            <DeleteBookComponent
+                                bookId = {props.bookId}
+                                onClose={handleCloseDialogDelete}
+                            />
+                        )
+                    }
                 </section>
             </section>
         </section>

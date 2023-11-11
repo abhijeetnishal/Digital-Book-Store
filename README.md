@@ -2,6 +2,9 @@
 This repository contains a full-stack application code for managing and searching a collection of books. It provides a RESTful API for managing books, integrates MongoDB and Elasticsearch for data storage and search functionality, and offers a user-friendly front-end for exploring books.
 <br>
 
+### Demo
+![Demo Video](./bookstore.gif)
+
 ## Table of Contents
 - [**Features**](#features)
 - [**Technologies**](#technologies)
